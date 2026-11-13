@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light" />
+  <title>8bit二进制开关演示（8 bit = 1 Byte）</title>
+  <style>
+    :root {
+      --ink: #122033;
+      --muted: #4a5d73;
+      --line: rgba(18, 32, 51, 0.1);
+      --blue: #1d4ed8;
+      --blue-bright: #2563eb;
+      --cyan: #38bdf8;
+      --red: #dc2626;
+      --green: #15803d;
+      --gold: #e8a317;
+      --glass: rgba(255, 255, 255, 0.78);
+      --glass-strong: rgba(255, 255, 255, 0.88);
+      --shadow: 0 18px 50px rgba(30, 70, 130, 0.14);
+      --radius: 18px;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+      color: var(--ink);
+      background: #e8f1fb;
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background:
+        radial-gradient(1200px 700px at 8% -10%, rgba(96, 165, 250, 0.45), transparent 55%),
+        radial-gradient(900px 600px at 100% 0%, rgba(167, 139, 250, 0.32), transparent 50%),
+        radial-gradient(800px 500px at 80% 100%, rgba(52, 211, 153, 0.22), transparent 50%),
+        radial-gradient(700px 500px at 0% 100%, rgba(251, 191, 36, 0.2), transparent 55%),
+        #e8f1fb;
+    }
+    .aurora {
+      position: absolute;
+      inset: -20%;
+      background:
+        radial-gradient(40% 36% at 20% 30%, rgba(59, 130, 246, 0.35), transparent 70%),
+        radial-gradient(36% 32% at 78% 24%, rgba(196, 181, 253, 0.32), transparent 70%),
+        radial-gradient(34% 30% at 62% 78%, rgba(45, 212, 191, 0.22), transparent 70%),
+        radial-gradient(28% 26% at 18% 80%, rgba(251, 191, 36, 0.18), transparent 70%);
+      filter: blur(28px);
+      animation: aurora-drift 28s ease-in-out infinite alternate;
+      transform: translate3d(0, 0, 0);
+    }
+    @keyframes aurora-drift {
+      0% { transform: translate3d(-2%, -1%, 0) scale(1); }
+      50% { transform: translate3d(3%, 2%, 0) scale(1.05); }
+      100% { transform: translate3d(-1%, 3%, 0) scale(1.02); }
+    }
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(29, 78, 216, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(29, 78, 216, 0.05) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
+    }
+    #particles, #confetti {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #confetti { z-index: 1; pointer-events: none; }
+
+    .wrap {
+      position: relative;
+      z-index: 2;
+      width: min(1120px, calc(100% - 24px));
+      margin: 20px auto 40px;
+      padding: 28px 24px 32px;
+      background: var(--glass);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 28px;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        var(--shadow);
+    }
+
+    header.hero {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .hero h1 {
+      font-size: clamp(1.55rem, 3.4vw, 2.15rem);
+      letter-spacing: 0.02em;
+      line-height: 1.25;
+      font-weight: 800;
+    }
+    .hero h1 span.accent {
+      background: linear-gradient(120deg, #1d4ed8, #0ea5e9 55%, #7c3aed);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 8px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--blue);
+      background: rgba(37, 99, 235, 0.1);
+      border: 1px solid rgba(37, 99, 235, 0.18);
+    }
+    .mute-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(18, 32, 51, 0.12);
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s var(--ease), background 0.2s;
+    }
+    .mute-btn:hover { background: #fff; transform: translateY(-1px); }
+    .mute-btn[aria-pressed="true"] { color: var(--muted); }
+
+    .intro {
+      background: linear-gradient(180deg, rgba(255, 250, 230, 0.95), rgba(255, 247, 214, 0.88));
+      border: 1px solid rgba(232, 163, 23, 0.28);
+      border-left: 5px solid #e8a317;
+      border-radius: 14px;
+      padding: 16px 18px 16px 18px;
+      margin-bottom: 18px;
+      color: #3a2e14;
+      font-size: 0.98rem;
+    }
+    .intro strong { color: #8a5a00; }
+    .intro .lead { font-weight: 800; margin-bottom: 6px; font-size: 1.02rem; }
+
+    .legend {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin: 4px 0 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      align-items: center;
+    }
+    .legend b { color: var(--ink); font-weight: 700; }
+    .dot {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+    .dot.on { background: #3b82f6; box-shadow: 0 0 8px #60a5fa; }
+    .dot.off { background: #c5cdd8; }
+    .dot.red { background: var(--red); width: 8px; height: 8px; }
+
+    .bits {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px;
+      perspective: 900px;
+    }
+    .bit-card {
+      position: relative;
+      isolation: isolate;
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      background: var(--glass-strong);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      backdrop-filter: blur(16px) saturate(160%);
+      border-radius: 16px;
+      padding: 16px 8px 12px;
+      min-height: 158px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 10px 24px rgba(30, 70, 130, 0.1);
+      transform: perspective(800px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) scale(var(--press, 1));
+      transform-style: preserve-3d;
+      transition: transform 0.18s var(--ease), box-shadow 0.25s, border-color 0.25s, background 0.25s;
+      color: inherit;
+      font: inherit;
+      overflow: hidden;
+    }
+    .bit-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(circle 8rem at var(--gx, 50%) var(--gy, 20%), rgba(255,255,255,0.45), transparent 60%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .bit-card:hover::after { opacity: 1; }
+    .bit-card.on {
+      background: linear-gradient(180deg, rgba(219, 234, 254, 0.92), rgba(255, 255, 255, 0.9));
+      border-color: rgba(37, 99, 235, 0.35);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 12px 28px rgba(37, 99, 235, 0.18),
+        0 0 0 1px rgba(37, 99, 235, 0.08);
+    }
+    .bit-card.just-on { animation: card-bounce 0.42s var(--ease); }
+    @keyframes card-bounce {
+      0% { transform: perspective(800px) scale(0.92); }
+      55% { transform: perspective(800px) scale(1.05); }
+      100% { transform: perspective(800px) scale(1); }
+    }
+    .bit-card:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 3px;
+    }
+    .bit-card.flow {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 12px 28px rgba(37, 99, 235, 0.2),
+        0 0 0 2px rgba(14, 165, 233, 0.55);
+    }
+    .bit-card .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(37, 99, 235, 0.28);
+      transform: scale(0);
+      animation: ripple 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to { transform: scale(16); opacity: 0; }
+    }
+
+    .light {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #e8edf3, #c5cdd8 55%, #a8b3c2);
+      box-shadow: inset 0 -4px 8px rgba(0,0,0,0.12), 0 4px 8px rgba(18,32,51,0.08);
+      position: relative;
+      transition: background 0.35s var(--ease), box-shadow 0.35s var(--ease), transform 0.35s var(--ease);
+      z-index: 1;
+    }
+    .bit-card.on .light {
+      background: radial-gradient(circle at 32% 28%, #dbeafe, #3b82f6 48%, #1d4ed8);
+      box-shadow:
+        inset 0 2px 6px rgba(255,255,255,0.7),
+        0 0 12px 4px rgba(59, 130, 246, 0.65),
+        0 0 28px 10px rgba(56, 189, 248, 0.4),
+        0 0 48px 16px rgba(37, 99, 235, 0.22);
+      animation: bloom 1.8s ease-in-out infinite;
+    }
+    @keyframes bloom {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.18); }
+    }
+    .light::before {
+      content: "";
+      position: absolute;
+      width: 18px; height: 12px;
+      left: 10px; top: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.7);
+      filter: blur(1px);
+    }
+    .bit-val {
+      font-size: 1.55rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      z-index: 1;
+    }
+    .bit-card.on .bit-val { color: var(--blue); }
+    .weight {
+      color: var(--red);
+      font-weight: 800;
+      font-size: 0.92rem;
+      text-align: center;
+      line-height: 1.3;
+      z-index: 1;
+    }
+    .weight small {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      opacity: 0.9;
+    }
+
+    .burst {
+      position: absolute;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #60a5fa;
+      pointer-events: none;
+      z-index: 2;
+      animation: burst 0.7s ease-out forwards;
+    }
+    @keyframes burst {
+      to { transform: translate(var(--bx), var(--by)) scale(0.2); opacity: 0; }
+    }
+
+    .flow-bus {
+      position: relative;
+      height: 28px;
+      margin: 2px 8px 18px;
+    }
+    .flow-bus .track {
+      position: absolute;
+      left: 0; right: 0; top: 14px;
+      height: 3px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, rgba(37,99,235,0.08), rgba(37,99,235,0.22), rgba(37,99,235,0.08));
+      overflow: hidden;
+    }
+    .flow-bus .packet {
+      position: absolute;
+      top: -3px;
+      width: 42px; height: 9px;
+      border-radius: 99px;
+      background: linear-gradient(90deg, transparent, #38bdf8, #2563eb, transparent);
+      filter: blur(0.2px);
+      animation: packet 2.4s linear infinite;
+      opacity: 0.15;
+    }
+    .flow-bus.active .packet { opacity: 1; }
+    @keyframes packet {
+      from { left: -42px; }
+      to { left: 100%; }
+    }
+    .flow-taps {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 12px;
+      pointer-events: none;
+    }
+    .flow-taps span {
+      justify-self: center;
+      width: 3px;
+      height: 16px;
+      border-radius: 2px;
+      background: rgba(37, 99, 235, 0.12);
+      transition: background 0.3s, box-shadow 0.3s, height 0.3s;
+    }
+    .flow-taps span.on {
+      background: #3b82f6;
+      box-shadow: 0 0 8px #60a5fa;
+      height: 20px;
+    }
+
+    .panel {
+      background: var(--glass-strong);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      box-shadow: inset 0 1px 0 #fff, 0 8px 20px rgba(30,70,130,0.06);
+    }
+    .panel h2 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #1e3a5f;
+    }
+    .bin-row {
+      font-family: "SF Mono", "Cascadia Code", "JetBrains Mono", ui-monospace, Menlo, monospace;
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .bin-row span {
+      min-width: 1.15em;
+      text-align: center;
+      padding: 2px 4px;
+      border-radius: 8px;
+      color: #94a3b8;
+      background: rgba(148, 163, 184, 0.12);
+      transition: color 0.3s, background 0.3s, transform 0.3s;
+    }
+    .bin-row span.on {
+      color: var(--blue);
+      background: rgba(37, 99, 235, 0.12);
+    }
+    .bin-row span.flash { animation: term-flash 0.7s ease; }
+
+    .expansion {
+      font-size: clamp(0.86rem, 1.7vw, 1.02rem);
+      line-height: 1.85;
+      word-break: break-word;
+    }
+    .term {
+      display: inline-block;
+      padding: 0 3px;
+      border-radius: 5px;
+      color: #64748b;
+      transition: background 0.3s, color 0.3s;
+    }
+    .term.hot {
+      color: var(--blue);
+      font-weight: 800;
+    }
+    .term.flash { animation: term-flash 0.75s ease; }
+    @keyframes term-flash {
+      0% { background: #fde68a; color: #92400e; transform: scale(1.08); }
+      100% { background: transparent; }
+    }
+    .sum { font-weight: 800; color: var(--ink); }
+
+    .result {
+      position: relative;
+      overflow: hidden;
+      margin: 4px 0 16px;
+      padding: 18px 20px;
+      border-radius: 16px;
+      background: linear-gradient(105deg, #1d4ed8 0%, #2563eb 45%, #0ea5e9 100%);
+      color: #fff;
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      box-shadow: 0 14px 36px rgba(29, 78, 216, 0.35);
+      text-align: center;
+    }
+    .result::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.22) 50%, transparent 80%);
+      transform: translateX(-100%);
+      animation: sheen 4.5s ease-in-out infinite;
+    }
+    @keyframes sheen {
+      0%, 40% { transform: translateX(-100%); }
+      70%, 100% { transform: translateX(100%); }
+    }
+    .result .label { font-size: 1.15rem; font-weight: 700; position: relative; }
+    .result .num {
+      font-size: clamp(2.4rem, 7vw, 3.4rem);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+      position: relative;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.2);
+      line-height: 1;
+    }
+    .result.pop { animation: result-pop 0.5s var(--ease); }
+    @keyframes result-pop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+    .result.celebrate {
+      animation: result-pop 0.5s var(--ease), celebrate-glow 1.2s ease-in-out 2;
+    }
+    @keyframes celebrate-glow {
+      0%, 100% { box-shadow: 0 14px 36px rgba(29, 78, 216, 0.35); }
+      50% { box-shadow: 0 0 0 6px rgba(250, 204, 21, 0.45), 0 18px 48px rgba(29, 78, 216, 0.5); }
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s var(--ease), filter 0.15s, box-shadow 0.2s;
+    }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .btn:active { transform: scale(0.97); }
+    .btn:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+    .btn-zero { background: #e2e8f0; color: #334155; }
+    .btn-one { background: #16a34a; color: #fff; box-shadow: 0 6px 16px rgba(22, 163, 74, 0.28); }
+    .btn-rand { background: #4f46e5; color: #fff; box-shadow: 0 6px 16px rgba(79, 70, 229, 0.28); }
+    .convert {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-left: auto;
+      font-size: 0.92rem;
+    }
+    .convert label { font-weight: 700; color: var(--muted); }
+    .convert input {
+      width: 88px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(18,32,51,0.16);
+      font: inherit;
+      font-weight: 700;
+      text-align: center;
+      background: #fff;
+    }
+    .btn-apply { background: #1d4ed8; color: #fff; }
+
+    .quiz {
+      background: var(--glass-strong);
+      border: 1px solid rgba(255,255,255,0.8);
+      border-radius: 20px;
+      padding: 18px 18px 10px;
+      box-shadow: inset 0 1px 0 #fff, 0 8px 20px rgba(30,70,130,0.06);
+    }
+    .quiz h2 { font-size: 1.15rem; margin-bottom: 12px; }
+    details.q {
+      border-top: 1px solid var(--line);
+      padding: 10px 0;
+    }
+    details.q summary {
+      cursor: pointer;
+      font-weight: 700;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    details.q summary::-webkit-details-marker { display: none; }
+    details.q summary::after {
+      content: "点击查看答案";
+      flex-shrink: 0;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--blue);
+      background: rgba(37,99,235,0.1);
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    details.q[open] summary::after { content: "收起答案"; }
+    .answer {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #ecfdf5;
+      color: #065f46;
+      font-weight: 700;
+      border: 1px solid #a7f3d0;
+    }
+
+    .hint {
+      margin-top: 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .enter { animation: enter 0.7s var(--ease) both; }
+    .enter-d1 { animation-delay: 0.05s; }
+    .enter-d2 { animation-delay: 0.12s; }
+    .enter-d3 { animation-delay: 0.2s; }
+    .enter-d4 { animation-delay: 0.28s; }
+    .enter-d5 { animation-delay: 0.36s; }
+    .enter-d6 { animation-delay: 0.44s; }
+    @keyframes enter {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (max-width: 820px) {
+      header.hero { flex-wrap: wrap; }
+      .hero h1 { font-size: 1.55rem; }
+      .mute-btn { margin-left: auto; }
+      .bits { grid-template-columns: repeat(4, 1fr); }
+      .flow-taps { display: none; }
+      .flow-bus { height: 16px; margin: 6px 4px 14px; }
+      .convert { margin-left: 0; }
+      .wrap { padding: 20px 14px 24px; margin: 12px auto 28px; border-radius: 20px; }
+    }
+    @media (max-width: 520px) {
+      header.hero { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .hero h1 { width: 100%; line-height: 1.3; }
+      .mute-btn { align-self: flex-start; }
+    }
+    @media (max-width: 420px) {
+      .bits { gap: 8px; }
+      .bit-card { min-height: 136px; padding: 12px 4px 8px; }
+      .light { width: 42px; height: 42px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .aurora, .flow-bus .packet, .bit-card.on .light, .result::before,
+      .enter, .bit-card.just-on, .result.pop, .result.celebrate,
+      .term.flash, .bin-row span.flash { animation: none !important; }
+      .bit-card { transition: none; transform: none !important; }
+      .burst { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true">
+    <div class="aurora"></div>
+    <div class="grid"></div>
+    <canvas id="particles"></canvas>
+    <canvas id="confetti"></canvas>
+  </div>
+
+  <main class="wrap">
+    <header class="hero enter">
+      <div>
+        <h1><span class="accent">8bit</span>二进制开关演示</h1>
+        <div class="badge">8 bit = 1 Byte</div>
+      </div>
+      <button class="mute-btn" id="muteBtn" type="button" aria-pressed="false" title="开关点击音效">🔊 音效开</button>
+    </header>
+
+    <section class="intro enter enter-d1">
+      <div class="lead">💡 思考导入</div>
+      计算机内部只有高电平、低电平两种状态，只用数字 0 和 1 来存储一切信息。那么问题来了：只有0和1，计算机如何表达数字、文字、图片、声音？8个0/1组合在一起（8bit，1字节），最多可以表示多少个不同的数值？下面我们通过开关模型，直观学习二进制转十进制的计算原理。
+    </section>
+
+    <p class="legend enter enter-d2">
+      <span>点击方块切换开关：</span>
+      <span><i class="dot on"></i><b>蓝色灯</b> = bit = 1</span>
+      <span><i class="dot off"></i><b>灰色灯</b> = bit = 0</span>
+      <span><i class="dot red"></i>红色文字为本位位权 2<sup>n</sup></span>
+    </p>
+
+    <div class="bits enter enter-d3" id="bits"></div>
+    <div class="flow-bus" id="flowBus" aria-hidden="true">
+      <div class="flow-taps" id="flowTaps"></div>
+      <div class="track"><div class="packet"></div></div>
+    </div>
+
+    <section class="panel enter enter-d4">
+      <h2>二进制8位序列</h2>
+      <div class="bin-row" id="binRow"></div>
+    </section>
+
+    <section class="panel enter enter-d4">
+      <h2>二进制转十进制计算展开过程</h2>
+      <div class="expansion" id="expansion"></div>
+    </section>
+
+    <div class="result enter enter-d5" id="result">
+      <span class="label">十进制结果 =</span>
+      <span class="num" id="resultNum">132</span>
+    </div>
+
+    <div class="actions enter enter-d5">
+      <button class="btn btn-zero" id="btnZero" type="button">全部置 0</button>
+      <button class="btn btn-one" id="btnOne" type="button">全部置 1</button>
+      <button class="btn btn-rand" id="btnRand" type="button">随机</button>
+      <form class="convert" id="convertForm">
+        <label for="decInput">十进制 (0–255)</label>
+        <input id="decInput" type="number" min="0" max="255" step="1" value="132" inputmode="numeric" />
+        <button class="btn btn-apply" type="submit">应用到开关</button>
+      </form>
+    </div>
+
+    <section class="quiz enter enter-d6">
+      <h2>课堂互动思考题</h2>
+      <details class="q">
+        <summary>1. 8bit 最多可以表示多少个不同的数值？</summary>
+        <div class="answer">256 个，范围是 0～255（因为 2⁸ = 256）。</div>
+      </details>
+      <details class="q">
+        <summary>2. 8 个开关全部为 1 时，十进制是多少？</summary>
+        <div class="answer">255。计算：128+64+32+16+8+4+2+1 = 255。</div>
+      </details>
+      <details class="q">
+        <summary>3. 二进制 00001010 是多少？</summary>
+        <div class="answer">10。因为 1×2³ + 1×2¹ = 8 + 2 = 10。可点「应用到开关」输入 10 验证。</div>
+      </details>
+      <details class="q">
+        <summary>4. 十进制 100 的二进制是多少？</summary>
+        <div class="answer">01100100。因为 64+32+4 = 100。</div>
+      </details>
+    </section>
+
+    <p class="hint">键盘快捷键：数字键 1–8 可从左到右切换对应开关（输入框内输入时无效）</p>
+  </main>
+
+  <script>
+    (function () {
+      const WEIGHTS = [128, 64, 32, 16, 8, 4, 2, 1];
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+      let bits = [1, 0, 0, 0, 0, 1, 0, 0];
+      let prevBits = bits.slice();
+      let displayValue = 132;
+      let muted = false;
+      let audioCtx = null;
+      let celebrated = false;
+      let animFrame = 0;
+
+      const bitsEl = document.getElementById("bits");
+      const tapsEl = document.getElementById("flowTaps");
+      const busEl = document.getElementById("flowBus");
+      const binRow = document.getElementById("binRow");
+      const expansionEl = document.getElementById("expansion");
+      const resultEl = document.getElementById("result");
+      const resultNum = document.getElementById("resultNum");
+      const muteBtn = document.getElementById("muteBtn");
+      const decInput = document.getElementById("decInput");
+
+      function decimalOf(arr) {
+        return arr.reduce(function (s, b, i) { return s + b * WEIGHTS[i]; }, 0);
+      }
+
+      function toBits(n) {
+        n = Math.max(0, Math.min(255, n | 0));
+        return WEIGHTS.map(function (w) {
+          const on = n >= w ? 1 : 0;
+          if (on) n -= w;
+          return on;
+        });
+      }
+
+      for (let i = 0; i < 8; i++) {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "bit-card";
+        card.dataset.index = String(i);
+        card.innerHTML =
+          '<span class="light" aria-hidden="true"></span>' +
+          '<span class="bit-val">0</span>' +
+          '<span class="weight">2<sup>' + (7 - i) + '</sup><small>' + WEIGHTS[i] + '</small></span>';
+        card.setAttribute("aria-label", "第 " + (7 - i) + " 位，位权 " + WEIGHTS[i]);
+        bitsEl.appendChild(card);
+
+        const tap = document.createElement("span");
+        tapsEl.appendChild(tap);
+
+        const digit = document.createElement("span");
+        digit.textContent = "0";
+        binRow.appendChild(digit);
+
+        card.addEventListener("click", function (e) {
+          ripple(card, e);
+          toggle(i);
+        });
+
+        if (finePointer && !reduceMotion) {
+          card.addEventListener("pointermove", function (e) {
+            const r = card.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width;
+            const y = (e.clientY - r.top) / r.height;
+            card.style.setProperty("--tilt-y", ((x - 0.5) * 12).toFixed(2) + "deg");
+            card.style.setProperty("--tilt-x", ((0.5 - y) * 10).toFixed(2) + "deg");
+            card.style.setProperty("--gx", (x * 100).toFixed(1) + "%");
+            card.style.setProperty("--gy", (y * 100).toFixed(1) + "%");
+          });
+          card.addEventListener("pointerleave", function () {
+            card.style.setProperty("--tilt-x", "0deg");
+            card.style.setProperty("--tilt-y", "0deg");
+          });
+        }
+      }
+
+      const cards = bitsEl.querySelectorAll(".bit-card");
+      const taps = tapsEl.querySelectorAll("span");
+      const digits = binRow.querySelectorAll("span");
+
+      function ripple(card, e) {
+        if (reduceMotion) return;
+        const r = card.getBoundingClientRect();
+        const span = document.createElement("span");
+        span.className = "ripple";
+        const size = 20;
+        span.style.width = span.style.height = size + "px";
+        span.style.left = (e.clientX - r.left - size / 2) + "px";
+        span.style.top = (e.clientY - r.top - size / 2) + "px";
+        card.appendChild(span);
+        setTimeout(function () { span.remove(); }, 650);
+      }
+
+      function burst(card) {
+        if (reduceMotion) return;
+        const light = card.querySelector(".light");
+        const cr = card.getBoundingClientRect();
+        const lr = light.getBoundingClientRect();
+        const cx = lr.left + lr.width / 2 - cr.left;
+        const cy = lr.top + lr.height / 2 - cr.top;
+        for (let k = 0; k < 12; k++) {
+          const p = document.createElement("span");
+          p.className = "burst";
+          const ang = (Math.PI * 2 * k) / 12 + Math.random() * 0.3;
+          const dist = 28 + Math.random() * 26;
+          p.style.left = cx + "px";
+          p.style.top = cy + "px";
+          p.style.background = k % 2 ? "#38bdf8" : "#60a5fa";
+          p.style.setProperty("--bx", Math.cos(ang) * dist + "px");
+          p.style.setProperty("--by", Math.sin(ang) * dist + "px");
+          card.appendChild(p);
+          setTimeout(function () { p.remove(); }, 720);
+        }
+      }
+
+      function ensureAudio() {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+        return audioCtx;
+      }
+
+      function playClick(on) {
+        if (muted) return;
+        const ctx = ensureAudio();
+        if (!ctx) return;
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = "triangle";
+        osc2.type = "sine";
+        osc.frequency.setValueAtTime(on ? 920 : 420, t);
+        osc.frequency.exponentialRampToValueAtTime(on ? 480 : 220, t + 0.07);
+        osc2.frequency.setValueAtTime(on ? 1840 : 840, t);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(on ? 0.07 : 0.045, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+        osc.connect(g);
+        osc2.connect(g);
+        g.connect(ctx.destination);
+        osc.start(t);
+        osc2.start(t);
+        osc.stop(t + 0.12);
+        osc2.stop(t + 0.08);
+      }
+
+      function toggle(i) {
+        const next = bits.slice();
+        next[i] = next[i] ? 0 : 1;
+        applyBits(next, { source: i, sound: true, burst: !!next[i] });
+      }
+
+      function applyBits(next, opts) {
+        opts = opts || {};
+        prevBits = bits.slice();
+        const changed = [];
+        for (let i = 0; i < 8; i++) if (prevBits[i] !== next[i]) changed.push(i);
+        bits = next;
+        if (opts.sound && changed.length) playClick(bits[changed[0]] === 1);
+        if (opts.burst && opts.source != null && bits[opts.source] === 1) burst(cards[opts.source]);
+        render(changed, opts);
+      }
+
+      function render(changed, opts) {
+        changed = changed || [];
+        const value = decimalOf(bits);
+        const anyOn = value > 0;
+        busEl.classList.toggle("active", anyOn);
+
+        cards.forEach(function (card, i) {
+          const on = bits[i] === 1;
+          card.classList.toggle("on", on);
+          card.setAttribute("aria-pressed", on ? "true" : "false");
+          card.querySelector(".bit-val").textContent = on ? "1" : "0";
+          taps[i].classList.toggle("on", on);
+          digits[i].textContent = on ? "1" : "0";
+          digits[i].classList.toggle("on", on);
+          if (changed.indexOf(i) !== -1) {
+            digits[i].classList.remove("flash");
+            void digits[i].offsetWidth;
+            digits[i].classList.add("flash");
+            if (on && !reduceMotion) {
+              card.classList.remove("just-on");
+              void card.offsetWidth;
+              card.classList.add("just-on");
+            }
+          }
+          card.classList.toggle("flow", on);
+        });
+
+        renderExpansion(changed);
+        animateNumber(displayValue, value);
+        decInput.value = String(value);
+
+        resultEl.classList.remove("pop", "celebrate");
+        void resultEl.offsetWidth;
+        if (value === 255) {
+          resultEl.classList.add("celebrate");
+          if (!celebrated) {
+            celebrated = true;
+            launchConfetti();
+          }
+        } else {
+          celebrated = false;
+          if (changed.length) resultEl.classList.add("pop");
+        }
+      }
+
+      function renderExpansion(changed) {
+        const value = decimalOf(bits);
+        if (value === 0) {
+          expansionEl.innerHTML = '<span class="sum">= 0（全部bit为0）</span>';
+          return;
+        }
+        const parts = [];
+        const used = [];
+        for (let i = 0; i < 8; i++) {
+          const hot = bits[i] === 1;
+          const cls = "term" + (hot ? " hot" : "") + (changed.indexOf(i) !== -1 ? " flash" : "");
+          parts.push('<span class="' + cls + '">' + bits[i] + "×2<sup>" + (7 - i) + "</sup></span>");
+          if (hot) used.push(WEIGHTS[i]);
+        }
+        expansionEl.innerHTML =
+          parts.join(" + ") +
+          ' = <span class="sum">' + used.join(" + ") + " = " + value + "</span>";
+      }
+
+      function animateNumber(from, to) {
+        displayValue = to;
+        if (reduceMotion || from === to) {
+          resultNum.textContent = String(to);
+          return;
+        }
+        cancelAnimationFrame(animFrame);
+        const start = performance.now();
+        const dur = 480;
+        function frame(now) {
+          const p = Math.min(1, (now - start) / dur);
+          const e = 1 - Math.pow(1 - p, 3);
+          resultNum.textContent = String(Math.round(from + (to - from) * e));
+          if (p < 1) animFrame = requestAnimationFrame(frame);
+        }
+        animFrame = requestAnimationFrame(frame);
+      }
+
+      document.getElementById("btnZero").addEventListener("click", function () {
+        applyBits([0,0,0,0,0,0,0,0], { sound: true });
+      });
+      document.getElementById("btnOne").addEventListener("click", function () {
+        applyBits([1,1,1,1,1,1,1,1], { sound: true, burst: true });
+        if (!reduceMotion) cards.forEach(function (c) { burst(c); });
+      });
+      document.getElementById("btnRand").addEventListener("click", function () {
+        applyBits(toBits((Math.random() * 256) | 0), { sound: true });
+      });
+      document.getElementById("convertForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const n = Number(decInput.value);
+        if (!Number.isFinite(n) || n < 0 || n > 255) {
+          decInput.focus();
+          return;
+        }
+        applyBits(toBits(Math.round(n)), { sound: true });
+      });
+
+      muteBtn.addEventListener("click", function () {
+        muted = !muted;
+        muteBtn.setAttribute("aria-pressed", muted ? "true" : "false");
+        muteBtn.textContent = muted ? "🔇 已静音" : "🔊 音效开";
+        if (!muted) ensureAudio();
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+        if (e.key >= "1" && e.key <= "8") {
+          e.preventDefault();
+          const i = Number(e.key) - 1;
+          const card = cards[i];
+          const r = card.getBoundingClientRect();
+          ripple(card, { clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 });
+          toggle(i);
+        }
+      });
+
+      /* subtle floating particles */
+      (function particles() {
+        const canvas = document.getElementById("particles");
+        const ctx = canvas.getContext("2d");
+        let dots = [];
+        let running = true;
+        function resize() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          const n = Math.min(48, Math.floor(canvas.width / 28));
+          dots = Array.from({ length: n }, function () {
+            return {
+              x: Math.random() * canvas.width,
+              y: Math.random() * canvas.height,
+              r: 1 + Math.random() * 1.6,
+              vx: (Math.random() - 0.5) * 0.28,
+              vy: (Math.random() - 0.5) * 0.28
+            };
+          });
+        }
+        function tick() {
+          if (!running) return;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "rgba(37,99,235,0.28)";
+          dots.forEach(function (d) {
+            if (!reduceMotion) {
+              d.x += d.vx;
+              d.y += d.vy;
+              if (d.x < 0 || d.x > canvas.width) d.vx *= -1;
+              if (d.y < 0 || d.y > canvas.height) d.vy *= -1;
+            }
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.strokeStyle = "rgba(37,99,235,0.08)";
+          ctx.lineWidth = 1;
+          for (let i = 0; i < dots.length; i++) {
+            for (let j = i + 1; j < dots.length; j++) {
+              const dx = dots[i].x - dots[j].x;
+              const dy = dots[i].y - dots[j].y;
+              const dist = Math.hypot(dx, dy);
+              if (dist < 120) {
+                ctx.globalAlpha = 1 - dist / 120;
+                ctx.beginPath();
+                ctx.moveTo(dots[i].x, dots[i].y);
+                ctx.lineTo(dots[j].x, dots[j].y);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+              }
+            }
+          }
+          if (!reduceMotion) requestAnimationFrame(tick);
+        }
+        resize();
+        window.addEventListener("resize", resize);
+        document.addEventListener("visibilitychange", function () {
+          running = !document.hidden;
+          if (running && !reduceMotion) requestAnimationFrame(tick);
+        });
+        tick();
+      })();
+
+      function launchConfetti() {
+        if (reduceMotion) return;
+        const canvas = document.getElementById("confetti");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const colors = ["#2563eb", "#38bdf8", "#f59e0b", "#22c55e", "#f43f5e", "#a78bfa", "#ffffff"];
+        const pieces = Array.from({ length: 110 }, function () {
+          return {
+            x: Math.random() * canvas.width,
+            y: -20 - Math.random() * canvas.height * 0.4,
+            w: 6 + Math.random() * 7,
+            h: 8 + Math.random() * 8,
+            vy: 2.4 + Math.random() * 3.2,
+            vx: (Math.random() - 0.5) * 2.4,
+            r: Math.random() * Math.PI,
+            vr: (Math.random() - 0.5) * 0.2,
+            color: colors[(Math.random() * colors.length) | 0]
+          };
+        });
+        let start = performance.now();
+        function frame(now) {
+          const elapsed = now - start;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          pieces.forEach(function (p) {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.r += p.vr;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.r);
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, 1 - elapsed / 2400);
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            ctx.restore();
+          });
+          if (elapsed < 2400) requestAnimationFrame(frame);
+          else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        requestAnimationFrame(frame);
+      }
+
+      window.__binaryDemo = { decimalOf: decimalOf, toBits: toBits, getBits: function () { return bits.slice(); } };
+      render([]);
+    })();
+  </script>
+</body>
+</html>
